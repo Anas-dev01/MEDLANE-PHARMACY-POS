@@ -1,0 +1,95 @@
+-- 1. Create the database if it doesn't exist
+CREATE DATABASE IF NOT EXISTS medlane_central;
+USE medlane_central;
+
+-- 2. Create the Products Table
+CREATE TABLE Products (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    barcode VARCHAR(255) UNIQUE,
+    name VARCHAR(255) NOT NULL,
+    category VARCHAR(255),
+    quantity INT DEFAULT 0,
+    price_single DECIMAL(10,2) NOT NULL,
+    price_wholesale DECIMAL(10,2) DEFAULT NULL,
+    min_stock INT DEFAULT 5,
+    expiry_date VARCHAR(50) NULL  
+);
+
+-- 3. Create the Customers Table
+CREATE TABLE Customers (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    phone VARCHAR(50),
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 4. Create the Sales Table
+CREATE TABLE Sales (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    datetime VARCHAR(255) NOT NULL,
+    total_amount DECIMAL(10,2) NOT NULL,
+    amount_paid DECIMAL(10,2) NOT NULL,
+    discount DECIMAL(10,2) DEFAULT 0.0,
+    payment_type VARCHAR(50),
+    cashier_name VARCHAR(100),
+    customer_id INT NULL,
+    FOREIGN KEY (customer_id) REFERENCES Customers(id) ON DELETE SET NULL
+);
+
+-- 5. Create the SaleItems Table (Links Sales to Products)
+CREATE TABLE SaleItems (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    sale_id INT NOT NULL,
+    product_id INT NOT NULL,
+    quantity INT NOT NULL,
+    price DECIMAL(10,2) NOT NULL,
+    FOREIGN KEY (sale_id) REFERENCES Sales(id) ON DELETE CASCADE,
+    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE
+);
+
+-- 6. Create the Debts Table
+CREATE TABLE Debts (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    type ENUM('customer', 'supplier') NOT NULL,
+    entity_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    status ENUM('paid', 'unpaid') DEFAULT 'unpaid',
+    due_date DATETIME NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+);
+
+-- 7. Create the Debt Repayments Table (For tracking partial payments)
+CREATE TABLE DebtRepayments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    debt_id INT NOT NULL,
+    amount DECIMAL(10,2) NOT NULL,
+    payment_type VARCHAR(50),
+    cashier_name VARCHAR(100),
+    datetime DATETIME NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (debt_id) REFERENCES Debts(id) ON DELETE CASCADE
+);
+
+-- 8. Create the Adjustments Table (For manual shrinkage/stock changes)
+CREATE TABLE Adjustments (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    old_quantity INT NOT NULL,
+    new_quantity INT NOT NULL,
+    reason VARCHAR(255),
+    cashier_name VARCHAR(100),
+    datetime VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE
+);
+
+-- 9. Create the Inventory Logs Table (The paper trail of ALL stock movements)
+CREATE TABLE InventoryLogs (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    product_id INT NOT NULL,
+    action VARCHAR(50) NOT NULL,
+    quantity INT NOT NULL,
+    datetime VARCHAR(255) NOT NULL,
+    created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (product_id) REFERENCES Products(id) ON DELETE CASCADE
+);

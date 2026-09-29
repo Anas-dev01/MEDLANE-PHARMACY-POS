@@ -1,0 +1,20 @@
+USE medlane_central;
+
+-- Add missing image_path to Products
+ALTER TABLE Products ADD COLUMN image_path VARCHAR(255) NULL;
+
+-- Add missing phone to Users
+ALTER TABLE Users ADD COLUMN phone VARCHAR(50) NULL;
+
+-- Ensure Users table matches your V5 migration
+-- If you haven't created the Users table on MariaDB yet, run this:
+CREATE TABLE IF NOT EXISTS Users (
+    id INT PRIMARY KEY AUTO_INCREMENT,
+    name VARCHAR(255) NOT NULL,
+    first_name VARCHAR(255) DEFAULT '',
+    last_name VARCHAR(255) DEFAULT '',
+    phone VARCHAR(50) DEFAULT '',
+    role VARCHAR(50),
+    permissions TEXT,
+    password VARCHAR(255)
+);
